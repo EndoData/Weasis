@@ -83,17 +83,16 @@ import org.weasis.dicom.explorer.print.DicomPrintDialog;
 import org.weasis.dicom.viewer2d.DcmHeaderToolBar;
 import org.weasis.dicom.viewer2d.EventManager;
 import org.weasis.dicom.viewer2d.LutToolBar;
+import org.weasis.dicom.viewer2d.EndoDataToolBar;
 import org.weasis.dicom.viewer2d.Messages;
 import org.weasis.dicom.viewer2d.View2dContainer;
 import org.weasis.dicom.viewer2d.View2dFactory;
 import org.weasis.dicom.viewer2d.mpr.MprView.SliceOrientation;
 
-public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
-    implements PropertyChangeListener {
+public class MPRContainer extends ImageViewerPlugin<DicomImageElement> implements PropertyChangeListener {
   private static final Logger LOGGER = LoggerFactory.getLogger(MPRContainer.class);
 
-  public static final List<SynchView> SYNCH_LIST =
-      Collections.synchronizedList(new ArrayList<SynchView>());
+  public static final List<SynchView> SYNCH_LIST = Collections.synchronizedList(new ArrayList<SynchView>());
 
   static SynchView DEFAULT_MPR;
 
@@ -111,66 +110,28 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
     actions.put(ActionW.LUT.cmd(), true);
     actions.put(ActionW.INVERT_LUT.cmd(), true);
     actions.put(ActionW.FILTER.cmd(), true);
-    DEFAULT_MPR =
-        new SynchView(
-            "MPR synch", // NON-NLS
-            "mpr", // NON-NLS
-            SynchData.Mode.STACK,
-            new ImageIcon(SynchView.class.getResource("/icon/22x22/tile.png")),
-            actions);
+    DEFAULT_MPR = new SynchView("MPR synch", // NON-NLS
+        "mpr", // NON-NLS
+        SynchData.Mode.STACK, new ImageIcon(SynchView.class.getResource("/icon/22x22/tile.png")), actions);
 
     SYNCH_LIST.add(DEFAULT_MPR);
   }
 
-  public static final GridBagLayoutModel VIEWS_2x1_mpr =
-      new GridBagLayoutModel(
-          new LinkedHashMap<>(3), "mpr", Messages.getString("MPRContainer.title")); // NON-NLS
+  public static final GridBagLayoutModel VIEWS_2x1_mpr = new GridBagLayoutModel(new LinkedHashMap<>(3), "mpr",
+      Messages.getString("MPRContainer.title")); // NON-NLS
 
   static {
     Map<LayoutConstraints, Component> constraints = VIEWS_2x1_mpr.getConstraints();
-    constraints.put(
-        new LayoutConstraints(
-            MprView.class.getName(),
-            0,
-            0,
-            0,
-            1,
-            2,
-            0.5,
-            1.0,
-            GridBagConstraints.CENTER,
-            GridBagConstraints.BOTH),
-        null);
-    constraints.put(
-        new LayoutConstraints(
-            MprView.class.getName(),
-            1,
-            1,
-            0,
-            1,
-            1,
-            0.5,
-            0.5,
-            GridBagConstraints.CENTER,
-            GridBagConstraints.BOTH),
-        null);
-    constraints.put(
-        new LayoutConstraints(
-            MprView.class.getName(),
-            2,
-            1,
-            1,
-            1,
-            1,
-            0.5,
-            0.5,
-            GridBagConstraints.CENTER,
-            GridBagConstraints.BOTH),
-        null);
+    constraints.put(new LayoutConstraints(MprView.class.getName(), 0, 0, 0, 1, 2, 0.5, 1.0, GridBagConstraints.CENTER,
+        GridBagConstraints.BOTH), null);
+    constraints.put(new LayoutConstraints(MprView.class.getName(), 1, 1, 0, 1, 1, 0.5, 0.5, GridBagConstraints.CENTER,
+        GridBagConstraints.BOTH), null);
+    constraints.put(new LayoutConstraints(MprView.class.getName(), 2, 1, 1, 1, 1, 0.5, 0.5, GridBagConstraints.CENTER,
+        GridBagConstraints.BOTH), null);
   }
 
-  public static final List<GridBagLayoutModel> LAYOUT_LIST =
-      Collections.synchronizedList(new ArrayList<GridBagLayoutModel>());
+  public static final List<GridBagLayoutModel> LAYOUT_LIST = Collections
+      .synchronizedList(new ArrayList<GridBagLayoutModel>());
 
   static {
     LAYOUT_LIST.add(VIEWS_2x1_mpr);
@@ -178,13 +139,14 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
     LAYOUT_LIST.add(VIEWS_2_f1x2);
   }
 
-  // Static tools shared by all the View2dContainer instances, tools are registered when a container
+  // Static tools shared by all the View2dContainer instances, tools are
+  // registered when a container
   // is selected
-  // Do not initialize tools in a static block (order initialization issue with eventManager), use
+  // Do not initialize tools in a static block (order initialization issue with
+  // eventManager), use
   // instead a lazy
   // initialization with a method.
-  public static final List<Toolbar> TOOLBARS =
-      Collections.synchronizedList(new ArrayList<Toolbar>());
+  public static final List<Toolbar> TOOLBARS = Collections.synchronizedList(new ArrayList<Toolbar>());
   public static final List<DockableTool> TOOLS = View2dContainer.TOOLS;
   private static volatile boolean initComponents = false;
 
@@ -205,27 +167,27 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
       // props.putBooleanProperty("weasis.toolbar.synchbouton", false);
 
       EventManager evtMg = EventManager.getInstance();
-      Optional<Toolbar> importBar =
-          View2dContainer.TOOLBARS.stream().filter(b -> b instanceof ImportToolBar).findFirst();
+      Optional<Toolbar> importBar = View2dContainer.TOOLBARS.stream().filter(b -> b instanceof ImportToolBar)
+          .findFirst();
       importBar.ifPresent(TOOLBARS::add);
-      Optional<Toolbar> exportBar =
-          View2dContainer.TOOLBARS.stream().filter(b -> b instanceof ExportToolBar).findFirst();
+      Optional<Toolbar> exportBar = View2dContainer.TOOLBARS.stream().filter(b -> b instanceof ExportToolBar)
+          .findFirst();
       exportBar.ifPresent(TOOLBARS::add);
-      Optional<Toolbar> viewBar =
-          View2dContainer.TOOLBARS.stream().filter(b -> b instanceof ViewerToolBar).findFirst();
+      Optional<Toolbar> viewBar = View2dContainer.TOOLBARS.stream().filter(b -> b instanceof ViewerToolBar).findFirst();
       viewBar.ifPresent(TOOLBARS::add);
       TOOLBARS.add(new MeasureToolBar(evtMg, 11));
       TOOLBARS.add(new ZoomToolBar(evtMg, 20, true));
       TOOLBARS.add(new RotationToolBar(evtMg, 30));
       TOOLBARS.add(new DcmHeaderToolBar(evtMg, 35));
       TOOLBARS.add(new LutToolBar(evtMg, 40));
+      TOOLBARS.add(new EndoDataToolBar(evtMg, 45));
 
       final BundleContext context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
       Preferences prefs = BundlePreferences.getDefaultPreferences(context);
       if (prefs != null) {
         String className = this.getClass().getSimpleName().toLowerCase();
-        InsertableUtil.applyPreferences(
-            TOOLBARS, prefs, context.getBundle().getSymbolicName(), className, Type.TOOLBAR);
+        InsertableUtil.applyPreferences(TOOLBARS, prefs, context.getBundle().getSymbolicName(), className,
+            Type.TOOLBAR);
       }
     }
   }
@@ -257,8 +219,7 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
         }
 
         JMVUtils.addItemToMenu(menuRoot, manager.getZoomMenu("weasis.pluginMenu.zoom"));
-        JMVUtils.addItemToMenu(
-            menuRoot, manager.getOrientationMenu("weasis.pluginMenu.orientation"));
+        JMVUtils.addItemToMenu(menuRoot, manager.getOrientationMenu("weasis.pluginMenu.orientation"));
 
         if (count < menuRoot.getItemCount()) {
           menuRoot.add(new JSeparator());
@@ -297,10 +258,8 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
       // Send event to select the related patient in Dicom Explorer.
       DataExplorerView dicomView = UIManager.getExplorerplugin(DicomExplorer.NAME);
       if (dicomView != null && dicomView.getDataExplorerModel() instanceof DicomModel) {
-        dicomView
-            .getDataExplorerModel()
-            .firePropertyChange(
-                new ObservableEvent(ObservableEvent.BasicAction.SELECT, this, null, getGroupID()));
+        dicomView.getDataExplorerModel()
+            .firePropertyChange(new ObservableEvent(ObservableEvent.BasicAction.SELECT, this, null, getGroupID()));
       }
 
     } else {
@@ -445,40 +404,29 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
 
   @Override
   public List<Action> getExportActions() {
-    return selectedImagePane == null
-        ? super.getExportActions()
-        : selectedImagePane.getExportToClipboardAction();
+    return selectedImagePane == null ? super.getExportActions() : selectedImagePane.getExportToClipboardAction();
   }
 
   @Override
   public List<Action> getPrintActions() {
     ArrayList<Action> actions = new ArrayList<>(1);
     final String title = Messages.getString("View2dContainer.print_layout");
-    DefaultAction printStd =
-        new DefaultAction(
-            title,
-            new ImageIcon(ImageViewerPlugin.class.getResource("/icon/16x16/printer.png")),
-            event -> {
-              ColorLayerUI layer = ColorLayerUI.createTransparentLayerUI(MPRContainer.this);
-              PrintDialog<DicomImageElement> dialog =
-                  new PrintDialog<>(
-                      SwingUtilities.getWindowAncestor(MPRContainer.this), title, eventManager);
-              ColorLayerUI.showCenterScreen(dialog, layer);
-            });
+    DefaultAction printStd = new DefaultAction(title,
+        new ImageIcon(ImageViewerPlugin.class.getResource("/icon/16x16/printer.png")), event -> {
+          ColorLayerUI layer = ColorLayerUI.createTransparentLayerUI(MPRContainer.this);
+          PrintDialog<DicomImageElement> dialog = new PrintDialog<>(SwingUtilities.getWindowAncestor(MPRContainer.this),
+              title, eventManager);
+          ColorLayerUI.showCenterScreen(dialog, layer);
+        });
     actions.add(printStd);
 
     final String title2 = Messages.getString("View2dContainer.dcm_print");
-    DefaultAction printStd2 =
-        new DefaultAction(
-            title2,
-            null,
-            event -> {
-              ColorLayerUI layer = ColorLayerUI.createTransparentLayerUI(MPRContainer.this);
-              DicomPrintDialog<?> dialog =
-                  new DicomPrintDialog<>(
-                      SwingUtilities.getWindowAncestor(MPRContainer.this), title2, eventManager);
-              ColorLayerUI.showCenterScreen(dialog, layer);
-            });
+    DefaultAction printStd2 = new DefaultAction(title2, null, event -> {
+      ColorLayerUI layer = ColorLayerUI.createTransparentLayerUI(MPRContainer.this);
+      DicomPrintDialog<?> dialog = new DicomPrintDialog<>(SwingUtilities.getWindowAncestor(MPRContainer.this), title2,
+          eventManager);
+      ColorLayerUI.showCenterScreen(dialog, layer);
+    });
     actions.add(printStd2);
     return actions;
   }
@@ -486,8 +434,7 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
   public MprView getMprView(SliceOrientation sliceOrientation) {
     for (ViewCanvas v : view2ds) {
       if (v instanceof MprView) {
-        if (sliceOrientation != null
-            && sliceOrientation.equals(((MprView) v).getSliceOrientation())) {
+        if (sliceOrientation != null && sliceOrientation.equals(((MprView) v).getSliceOrientation())) {
           return (MprView) v;
         }
       }
@@ -504,15 +451,15 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
       if (val instanceof MprView) {
         SliceOrientation sliceOrientation;
         switch (i) {
-          case 1:
-            sliceOrientation = SliceOrientation.CORONAL;
-            break;
-          case 2:
-            sliceOrientation = SliceOrientation.SAGITTAL;
-            break;
-          default:
-            sliceOrientation = SliceOrientation.AXIAL;
-            break;
+        case 1:
+          sliceOrientation = SliceOrientation.CORONAL;
+          break;
+        case 2:
+          sliceOrientation = SliceOrientation.SAGITTAL;
+          break;
+        default:
+          sliceOrientation = SliceOrientation.AXIAL;
+          break;
         }
         ((MprView) val).setType(sliceOrientation);
       }
@@ -528,67 +475,59 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
         this.setPluginName(StringUtil.getTruncatedString(title, 25, Suffix.THREE_PTS));
       }
       view.repaint();
-      process =
-          new Thread(Messages.getString("MPRContainer.build")) {
-            @Override
-            public void run() {
-              try {
-                SeriesBuilder.createMissingSeries(this, MPRContainer.this, view);
+      process = new Thread(Messages.getString("MPRContainer.build")) {
+        @Override
+        public void run() {
+          try {
+            SeriesBuilder.createMissingSeries(this, MPRContainer.this, view);
 
-                // Following actions need to be executed in EDT thread
-                GuiExecutor.instance()
-                    .execute(
-                        new Runnable() {
+            // Following actions need to be executed in EDT thread
+            GuiExecutor.instance().execute(new Runnable() {
 
-                          @Override
-                          public void run() {
-                            ActionState synch = eventManager.getAction(ActionW.SYNCH);
-                            if (synch instanceof ComboItemListener) {
-                              ((ComboItemListener) synch).setSelectedItem(MPRContainer.DEFAULT_MPR);
-                            }
-                            // Set the middle image (best choice to propagate the default preset of
-                            // non CT
-                            // modalities)
-                            ActionState seqAction = eventManager.getAction(ActionW.SCROLL_SERIES);
-                            if (seqAction instanceof SliderChangeListener) {
-                              SliderCineListener sliceAction = (SliderCineListener) seqAction;
-                              sliceAction.setSliderValue(sliceAction.getSliderMax() / 2);
-                            }
-                            ActionState cross = eventManager.getAction(ActionW.CROSSHAIR);
-                            if (cross instanceof CrosshairListener) {
-                              ((CrosshairListener) cross)
-                                  .setPoint(
-                                      view.getImageCoordinatesFromMouse(
-                                          view.getWidth() / 2, view.getHeight() / 2));
-                            }
-                            // Force to propagate the default preset
-                            ActionState presetAction = eventManager.getAction(ActionW.PRESET);
-                            if (presetAction instanceof ComboItemListener) {
-                              ComboItemListener p = (ComboItemListener) presetAction;
-                              p.setSelectedItemWithoutTriggerAction(null);
-                              p.setSelectedItem(p.getFirstItem());
-                            }
-                          }
-                        });
-
-              } catch (final Exception e) {
-                LOGGER.error("Build MPR", e);
-                // Following actions need to be executed in EDT thread
-                GuiExecutor.instance()
-                    .execute(() -> showErrorMessage(view2ds, view, e.getMessage()));
+              @Override
+              public void run() {
+                ActionState synch = eventManager.getAction(ActionW.SYNCH);
+                if (synch instanceof ComboItemListener) {
+                  ((ComboItemListener) synch).setSelectedItem(MPRContainer.DEFAULT_MPR);
+                }
+                // Set the middle image (best choice to propagate the default preset of
+                // non CT
+                // modalities)
+                ActionState seqAction = eventManager.getAction(ActionW.SCROLL_SERIES);
+                if (seqAction instanceof SliderChangeListener) {
+                  SliderCineListener sliceAction = (SliderCineListener) seqAction;
+                  sliceAction.setSliderValue(sliceAction.getSliderMax() / 2);
+                }
+                ActionState cross = eventManager.getAction(ActionW.CROSSHAIR);
+                if (cross instanceof CrosshairListener) {
+                  ((CrosshairListener) cross)
+                      .setPoint(view.getImageCoordinatesFromMouse(view.getWidth() / 2, view.getHeight() / 2));
+                }
+                // Force to propagate the default preset
+                ActionState presetAction = eventManager.getAction(ActionW.PRESET);
+                if (presetAction instanceof ComboItemListener) {
+                  ComboItemListener p = (ComboItemListener) presetAction;
+                  p.setSelectedItemWithoutTriggerAction(null);
+                  p.setSelectedItem(p.getFirstItem());
+                }
               }
-            }
-          };
+            });
+
+          } catch (final Exception e) {
+            LOGGER.error("Build MPR", e);
+            // Following actions need to be executed in EDT thread
+            GuiExecutor.instance().execute(() -> showErrorMessage(view2ds, view, e.getMessage()));
+          }
+        }
+      };
       process.start();
     } else {
       showErrorMessage(view2ds, null, Messages.getString("MPRContainer.mesg_missing_3d"));
     }
   }
 
-  public static void showErrorMessage(
-      List<ViewCanvas<DicomImageElement>> view2ds,
-      DefaultView2d<DicomImageElement> view,
-      String message) {
+  public static void showErrorMessage(List<ViewCanvas<DicomImageElement>> view2ds,
+      DefaultView2d<DicomImageElement> view, String message) {
     for (ViewCanvas<DicomImageElement> v : view2ds) {
       if (v != view && v instanceof MprView) {
         JProgressBar bar = ((MprView) v).getProgressBar();
@@ -609,8 +548,7 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
   }
 
   @Override
-  public void addSeriesList(
-      List<MediaSeries<DicomImageElement>> seriesList, boolean removeOldSeries) {
+  public void addSeriesList(List<MediaSeries<DicomImageElement>> seriesList, boolean removeOldSeries) {
     if (seriesList != null && !seriesList.isEmpty()) {
       addSeries(seriesList.get(0));
     }
@@ -625,12 +563,10 @@ public class MPRContainer extends ImageViewerPlugin<DicomImageElement>
     if (s != null) {
       Object img = s.getMedia(MediaSeries.MEDIA_POSITION.MIDDLE, null, null);
       if (img instanceof DicomImageElement) {
-        double[] v =
-            TagD.getTagValue((DicomImageElement) img, Tag.ImageOrientationPatient, double[].class);
+        double[] v = TagD.getTagValue((DicomImageElement) img, Tag.ImageOrientationPatient, double[].class);
         if (v != null && v.length == 6) {
-          Label orientation =
-              ImageOrientation.makeImageOrientationLabelFromImageOrientationPatient(
-                  v[0], v[1], v[2], v[3], v[4], v[5]);
+          Label orientation = ImageOrientation.makeImageOrientationLabelFromImageOrientationPatient(v[0], v[1], v[2],
+              v[3], v[4], v[5]);
           SliceOrientation sliceOrientation = SliceOrientation.AXIAL;
           if (ImageOrientation.Label.CORONAL.equals(orientation)) {
             sliceOrientation = SliceOrientation.CORONAL;
