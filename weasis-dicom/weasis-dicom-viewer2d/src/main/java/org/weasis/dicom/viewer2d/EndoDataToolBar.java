@@ -33,6 +33,10 @@ import org.weasis.dicom.codec.TagD;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.Base64;
+
 public class EndoDataToolBar extends WtoolBar {
 
     public EndoDataToolBar(final ImageViewerEventManager<DicomImageElement> eventManager, int index) {
@@ -70,8 +74,11 @@ public class EndoDataToolBar extends WtoolBar {
                     date = dateObject.toString();
                 }
 
-                String studyID = series.getTagValue(TagD.get(Tag.StudyID)) == null ? "0"
+                String studyID = series.getTagValue(TagD.get(Tag.StudyID)) == null ? ""
                         : series.getTagValue(TagD.get(Tag.StudyID)).toString();
+
+                String studyDescription = series.getTagValue(TagD.get(Tag.StudyDescription)).toString() == null ? ""
+                        : series.getTagValue(TagD.get(Tag.StudyDescription)).toString().toString();
 
                 PlanarImage src = view2DPane.getSourceImage();
                 if (src != null) {
@@ -83,14 +90,23 @@ public class EndoDataToolBar extends WtoolBar {
                     File destinationDir = new File(tempDir);
 
                     destinationDir.mkdirs();
-                    Imgcodecs
-                            .imwrite(Paths
-                                    .get(tempDir,
-                                            "screenshot__" + date + "___" + studyID + "____"
-                                                    + UUID.randomUUID().toString() + ".jpg")
-                                    .toAbsolutePath().toString(), opManager.process().toMat());
+                    String filePath = Paths.get(tempDir, "screenshot__" + UUID.randomUUID().toString() + ".jpg")
+                            .toAbsolutePath().toString();
+                    Imgcodecs.imwrite(filePath, opManager.process().toMat());
+
+                    // create `ObjectMapper` instance
+                    ObjectMapper mapper = new ObjectMapper();
+
+                    // create a JSON object
+                    ObjectNode output = mapper.createObjectNode();
+                    output.put("filePath", filePath);
+                    output.put("date", date);
+                    output.put("studyID", studyID);
+                    output.put("studyDescription", studyDescription);
 
                     try {
+                        String json = mapper.writeValueAsString(output);
+                        String encodedString = Base64.getUrlEncoder().encodeToString(json.getBytes());
 
                         boolean isMac;
                         String OS = System.getProperty("os.name", "generic").toLowerCase();
@@ -108,7 +124,7 @@ public class EndoDataToolBar extends WtoolBar {
                         } else {
                             cmd = "start ";
                         }
-                        cmd += "endodata://weasis/screenshot/TEST";
+                        cmd += "endodata://weasis/screenshot/" + encodedString;
                         Runtime run = Runtime.getRuntime();
                         Process pr = run.exec(cmd);
                         pr.waitFor();
