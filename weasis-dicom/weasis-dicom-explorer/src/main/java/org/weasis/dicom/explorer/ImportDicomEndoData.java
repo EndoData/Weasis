@@ -37,9 +37,6 @@ import org.weasis.dicom.codec.DicomMediaIO;
 import org.weasis.dicom.codec.DicomSpecialElement;
 import org.weasis.dicom.codec.TagD;
 import org.weasis.dicom.codec.TagD.Level;
-
-import org.weasis.dicom.explorer.LocalExport; // ENDODATA EDIT
-import org.weasis.dicom.explorer.ExportTree; // ENDODATA EDIT
 import org.weasis.core.api.explorer.DataExplorerView;
 import java.util.Enumeration;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -51,10 +48,6 @@ import org.weasis.dicom.codec.DicomSeries;
 
 import org.weasis.dicom.explorer.LoadLocalDicom;
 
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.FileOutputStream;
 import java.io.File;
 import java.util.Set;
 import java.util.List;
@@ -65,6 +58,10 @@ import org.weasis.core.api.media.MimeInspector;
 import org.weasis.dicom.codec.DicomCodec;
 import org.weasis.core.ui.model.GraphicModel;
 import org.weasis.core.ui.serialize.XmlSerializer;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.Base64;
 
 /**
  * @note This class is a pure copy of LoadLocalDicom taking care only of the
@@ -124,101 +121,74 @@ public class ImportDicomEndoData extends LoadLocalDicom {
                             || MimeInspector.isMatchingMimeTypeFromMagicNumber(file[i], DicomMediaIO.DICOM_MIMETYPE)) {
                         DicomMediaIO loader = new DicomMediaIO(file[i]);
                         if (loader.isReadableDicom()) {
-                            if (outputString == null) {
-                                outputString = "<ImportDateTime>" + LocalDateTime.now().toString()
-                                        + "</ImportDateTime>";
-                                outputString += "<ExportFolder>" + exportPath + "</ExportFolder>";
-                                LOGGER.info("Generating endodata string"); //$NON-NLS-1$
-                                Attributes dicomObject = loader.getDicomObject();
-                                outputString += "<StudyDescription>";
-                                outputString += dicomObject.getString(Tag.StudyDescription);
-                                outputString += "</StudyDescription>";
 
-                                outputString += "<StudyID>";
-                                outputString += dicomObject.getString(Tag.StudyID);
-                                outputString += "</StudyID>";
+                            // create `ObjectMapper` instance
+                            ObjectMapper mapper = new ObjectMapper();
+                            Attributes dicomObject = loader.getDicomObject();
 
-                                outputString += "<StudyDate>";
-                                outputString += dicomObject.getString(Tag.StudyDate);
-                                outputString += "</StudyDate>";
+                            // create a JSON object
+                            ObjectNode output = mapper.createObjectNode();
+                            output.put("ImportDateTime", LocalDateTime.now().toString());
+                            output.put("ExportFolder", exportPath);
+                            output.put("StudyDescription", dicomObject.getString(Tag.StudyDescription));
+                            output.put("StudyID", dicomObject.getString(Tag.StudyID));
+                            output.put("StudyDate", dicomObject.getString(Tag.StudyDate));
+                            output.put("SeriesDate", dicomObject.getString(Tag.SeriesDate));
+                            output.put("SeriesInstanceUID", dicomObject.getString(Tag.SeriesInstanceUID));
+                            output.put("StudyInstanceUID", dicomObject.getString(Tag.StudyInstanceUID));
 
-                                outputString += "<SeriesDate>";
-                                outputString += dicomObject.getString(Tag.SeriesDate);
-                                outputString += "</SeriesDate>";
+                            try {
 
-                                outputString += "<SeriesInstanceUID>";
-                                outputString += dicomObject.getString(Tag.SeriesInstanceUID);
-                                outputString += "</SeriesInstanceUID>";
+                                String json = mapper.writeValueAsString(output);
+                                String encodedString = Base64.getUrlEncoder().encodeToString(json.getBytes());
 
-                                outputString += "<StudyInstanceUID>";
-                                outputString += dicomObject.getString(Tag.StudyInstanceUID);
-                                outputString += "</StudyInstanceUID>";
-
-                                String encodedString = Base64.getUrlEncoder().encodeToString(outputString.getBytes());
-                                try {
-
-                                    boolean isMac;
-                                    String OS = System.getProperty("os.name", "generic").toLowerCase();
-                                    if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
-                                        isMac = true;
-                                    } else if (OS.indexOf("win") >= 0) {
-                                        isMac = false;
-                                    } else {
-                                        isMac = false; // Should throw actually.
-                                    }
-
-                                    String cmd;
-                                    if (isMac) {
-                                        cmd = "open ";
-                                    } else {
-                                        cmd = "start ";
-                                    }
-                                    cmd += "endodata://weasis/dicom-import/TEST";
-                                    // cmd += encodedString;
-                                    Runtime run = Runtime.getRuntime();
-                                    Process pr = run.exec(cmd);
-                                    pr.waitFor();
-                                    BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-                                    String line = "";
-                                    while ((line = buf.readLine()) != null) {
-                                        System.out.println(line);
-                                    }
-
-                                    // // Step 4 : export file and write info in txt file.
-                                    // // If you have a better solution (and simple and cross platform) for sending
-                                    // it
-                                    // // to the EndoData electron app, I am all ears...
-                                    // String tempFilePath = System.getProperty("user.home", "") + File.separator
-                                    // //$NON-NLS-1$ //$NON-NLS-2$
-                                    // + ".weasis" + File.separator //$NON-NLS-1$
-                                    // + "endodataimport.txt"; //$NON-NLS-1$
-                                    // OutputStream outputStream = new FileOutputStream(tempFilePath);
-                                    // PrintWriter printWriter = new PrintWriter(
-                                    // new OutputStreamWriter(outputStream, "UTF-8"));
-                                    // printWriter.write(outputString);
-                                    // printWriter.close();
-                                    // LOGGER.info("Written endodataimpor.txt"); //$NON-NLS-1$
-                                } catch (Exception e) {
-                                    LOGGER.info("Dicom export error", e); //$NON-NLS-1$
+                                boolean isMac;
+                                String OS = System.getProperty("os.name", "generic").toLowerCase();
+                                if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
+                                    isMac = true;
+                                } else if (OS.indexOf("win") >= 0) {
+                                    isMac = false;
+                                } else {
+                                    isMac = false; // Should throw actually.
                                 }
-                            }
-                            // Issue: must handle adding image to viewer and building thumbnail (middle
-                            // image)
-                            SeriesThumbnail t = this.buildDicomStructure(loader, true);
-                            if (t != null) {
-                                thumbs.add(t);
-                            }
 
-                            File gpxFile = new File(file[i].getPath() + ".xml"); //$NON-NLS-1$
-                            GraphicModel graphicModel = XmlSerializer.readPresentationModel(gpxFile);
-                            if (graphicModel != null) {
-                                loader.setTag(TagW.PresentationModel, graphicModel);
+                                String cmd;
+                                if (isMac) {
+                                    cmd = "open ";
+                                } else {
+                                    cmd = "start ";
+                                }
+                                cmd += "endodata://weasis/dicom-import/" + encodedString;
+                                Runtime run = Runtime.getRuntime();
+                                Process pr = run.exec(cmd);
+                                pr.waitFor();
+                                BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                                String line = "";
+                                while ((line = buf.readLine()) != null) {
+                                    System.out.println(line);
+                                }
+
+                            } catch (Exception e) {
+                                LOGGER.info("Dicom export error", e); //$NON-NLS-1$
                             }
+                        }
+                        // Issue: must handle adding image to viewer and building thumbnail (middle
+                        // image)
+                        SeriesThumbnail t = this.buildDicomStructure(loader, true);
+                        if (t != null) {
+                            thumbs.add(t);
+                        }
+
+                        File gpxFile = new File(file[i].getPath() + ".xml"); //$NON-NLS-1$
+                        GraphicModel graphicModel = XmlSerializer.readPresentationModel(gpxFile);
+                        if (graphicModel != null) {
+                            loader.setTag(TagW.PresentationModel, graphicModel);
                         }
                     }
                 }
             }
         }
+
         for (final SeriesThumbnail t : thumbs) {
             MediaSeries<MediaElement> series = t.getSeries();
             // Avoid to rebuild most of CR series thumbnail
