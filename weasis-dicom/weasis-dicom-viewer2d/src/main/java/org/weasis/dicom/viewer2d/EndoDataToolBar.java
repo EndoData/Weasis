@@ -77,7 +77,7 @@ public class EndoDataToolBar extends WtoolBar {
                 String studyID = series.getTagValue(TagD.get(Tag.StudyID)) == null ? ""
                         : series.getTagValue(TagD.get(Tag.StudyID)).toString();
 
-                String studyDescription = series.getTagValue(TagD.get(Tag.StudyDescription)).toString() == null ? ""
+                String studyDescription = series.getTagValue(TagD.get(Tag.StudyDescription)) == null ? ""
                         : series.getTagValue(TagD.get(Tag.StudyDescription)).toString().toString();
 
                 PlanarImage src = view2DPane.getSourceImage();
