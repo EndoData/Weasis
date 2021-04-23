@@ -221,8 +221,8 @@ jobs:
         env:
           RES: "weasis-distributions/script/resources/${{ matrix.wsystem }}"
           FILE_ASSOC: "weasis-distributions/script/file-associations.properties"
-          VENDOR: "Weasis Team"
-          COPYRIGHT: "© 2009-2020 Weasis Team"
+          VENDOR: "Weasis Team + EndoData Team (minor edits)"
+          COPYRIGHT: "© 2009-2020 Weasis Team (+ EndoData Team for edited files)"
         run: |
           mkdir -p final-dist
           machine=${{ matrix.wsystem }}
@@ -257,49 +257,48 @@ jobs:
           fi
           echo "APP_ARTIFACT=weasis-${machine}-${ARC_NAME}-${{ env.WEASIS_CLEAN_VERSION }}" >> $GITHUB_ENV
 
-      - name: Notarize Build
-        shell: bash
-        if: matrix.wsystem == 'macosx'
-        run: |
-          BUNDLE_PKG="final-dist/${{ env.NAME }}-${{ env.WEASIS_CLEAN_VERSION }}.pkg"
-          # create temporary files
-          NOTARIZE_APP_LOG=$(mktemp -t notarize-app)
-          NOTARIZE_INFO_LOG=$(mktemp -t notarize-info)
+      # - name: Notarize Build
+      #   shell: bash
+      #   if: matrix.wsystem == 'macosx'
+      #   run: |
+      #     BUNDLE_PKG="final-dist/${{ env.NAME }}-${{ env.WEASIS_CLEAN_VERSION }}.pkg"
+      #     # create temporary files
+      #     NOTARIZE_APP_LOG=$(mktemp -t notarize-app)
+      #     NOTARIZE_INFO_LOG=$(mktemp -t notarize-info)
 
-          # delete temporary files on exit
-          function finish {
-          rm "$NOTARIZE_APP_LOG" "$NOTARIZE_INFO_LOG"
-          }
-          trap finish EXIT
+      #     # delete temporary files on exit
+      #     function finish {
+      #     rm "$NOTARIZE_APP_LOG" "$NOTARIZE_INFO_LOG"
+      #     }
+      #     trap finish EXIT
 
+      #     # submit app for notarization
+      #     if xcrun altool --notarize-app --primary-bundle-id "org.test.${{ env.NAME }}" --username "${{ secrets.MACOS_NOTARIZATION_USER}}" --password "${{ secrets.MACOS_NOTARIZATION_PWD }}" -f "$BUNDLE_PKG" > "$NOTARIZE_APP_LOG" 2>&1; then
+      #     cat "$NOTARIZE_APP_LOG"
+      #     RequestUUID=$(awk -F ' = ' '/RequestUUID/ {print $2}' "$NOTARIZE_APP_LOG")
 
-          # submit app for notarization
-          if xcrun altool --notarize-app --primary-bundle-id "org.test.${{ env.NAME }}" --username "${{ secrets.MACOS_NOTARIZATION_USER}}" --password "${{ secrets.MACOS_NOTARIZATION_PWD }}" -f "$BUNDLE_PKG" > "$NOTARIZE_APP_LOG" 2>&1; then
-          cat "$NOTARIZE_APP_LOG"
-          RequestUUID=$(awk -F ' = ' '/RequestUUID/ {print $2}' "$NOTARIZE_APP_LOG")
+      #     # check status periodically
+      #     while sleep 60 && date; do
+      #      # check notarization status
+      #      if xcrun altool --notarization-info "$RequestUUID" --username "${{ secrets.MACOS_NOTARIZATION_USER}}" --password "${{ secrets.MACOS_NOTARIZATION_PWD }}" > "$NOTARIZE_INFO_LOG" 2>&1; then
+      #        cat "$NOTARIZE_INFO_LOG"
 
-          # check status periodically
-          while sleep 60 && date; do
-           # check notarization status
-           if xcrun altool --notarization-info "$RequestUUID" --username "${{ secrets.MACOS_NOTARIZATION_USER}}" --password "${{ secrets.MACOS_NOTARIZATION_PWD }}" > "$NOTARIZE_INFO_LOG" 2>&1; then
-             cat "$NOTARIZE_INFO_LOG"
+      #        # once notarization is complete, run stapler and exit
+      #        if ! grep -q "Status: in progress" "$NOTARIZE_INFO_LOG"; then
+      #          xcrun stapler staple "$BUNDLE_PKG"
+      #          exit $?
+      #        fi
+      #      else
+      #        cat "$NOTARIZE_INFO_LOG" 1>&2
+      #        exit 1
+      #      fi
+      #     done
+      #     else
+      #     cat "$NOTARIZE_APP_LOG" 1>&2
+      #     exit 1
+      #     fi
 
-             # once notarization is complete, run stapler and exit
-             if ! grep -q "Status: in progress" "$NOTARIZE_INFO_LOG"; then
-               xcrun stapler staple "$BUNDLE_PKG"
-               exit $?
-             fi
-           else
-             cat "$NOTARIZE_INFO_LOG" 1>&2
-             exit 1
-           fi
-          done
-          else
-          cat "$NOTARIZE_APP_LOG" 1>&2
-          exit 1
-          fi
-
-      - name: Upload the final opencv binary
+      - name: Upload the final artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.APP_ARTIFACT }}
