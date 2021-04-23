@@ -156,7 +156,7 @@ public class ImportDicomEndoData extends LoadLocalDicom {
                                 if (isMac) {
                                     cmd = "open ";
                                 } else {
-                                    cmd = "start ";
+                                    cmd = "cmd.exe /c start ";
                                 }
                                 cmd += "endodata://weasis/dicom-import/" + encodedString;
                                 Runtime run = Runtime.getRuntime();

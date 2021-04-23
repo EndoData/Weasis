@@ -122,7 +122,7 @@ public class EndoDataToolBar extends WtoolBar {
                         if (isMac) {
                             cmd = "open ";
                         } else {
-                            cmd = "start ";
+                            cmd = "cmd.exe /c start ";
                         }
                         cmd += "endodata://weasis/screenshot/" + encodedString;
                         Runtime run = Runtime.getRuntime();
