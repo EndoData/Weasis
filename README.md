@@ -1,60 +1,106 @@
-[![License](https://img.shields.io/badge/License-EPL%202.0-blue.svg)](https://opensource.org/licenses/EPL-2.0) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)   ![Maven Build](https://github.com/nroduit/weasis/workflows/Build/badge.svg)  
-[![Sonar](https://sonarcloud.io/api/project_badges/measure?project=weasis&metric=ncloc)](https://sonarcloud.io/component_measures?id=weasis) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=weasis&metric=reliability_rating)](https://sonarcloud.io/component_measures?id=weasis) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=weasis&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=weasis) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=weasis&metric=security_rating)](https://sonarcloud.io/component_measures?id=weasis) [![Sonar](https://sonarcloud.io/api/project_badges/measure?project=weasis&metric=alert_status)](https://sonarcloud.io/dashboard?id=weasis)   
+# Weasis for EndoData
 
-Weasis is a free medical DICOM viewer used in healthcare by hospitals, health networks, multicenter research trials, and patients.
+This is a slightly edited version of Weasis that integrates with EndoData (endodata.fr).
 
-![Weasis](weasis-distributions/resources/images/about.png)
+Edited files are
 
-* [General information](https://nroduit.github.io)
-* [Download binary releases](https://nroduit.github.io/en/getting-started)
-* [Live Demo with different datasets](https://nroduit.github.io/en/demo)
-* [Issues](https://github.com/nroduit/Weasis/issues) ([Old Issue Tracker](https://dcm4che.atlassian.net/projects/WEA))
-* [Google group](https://groups.google.com/forum/#!forum/dcm4che)
+```
+/Weasis/weasis-dicom/weasis-dicom-codec/src/main/java/org/weasis/dicom/codec/DicomMediaIO.java
+/Weasis/weasis-dicom/weasis-dicom-explorer/src/main/java/org/weasis/dicom/explorer/DicomModel.java
+/Weasis/weasis-dicom/weasis-dicom-explorer/src/main/java/org/weasis/dicom/explorer/ImportDicomEndoData.java
+/Weasis/weasis-dicom/weasis-dicom-explorer/src/main/java/org/weasis/dicom/explorer/LoadLocalDicom.java
+/Weasis/weasis-dicom/weasis-dicom-explorer/src/main/java/org/weasis/dicom/explorer/LocalExport.java
+/Weasis/weasis-dicom/weasis-dicom-viewer2d/src/main/java/org/weasis/dicom/viewer2d/EndoDataToolBar.java
+```
 
-# Build Weasis
+This version adds another method to call weasis using the Weasis web protocol (weasis://endodataimport), which opens a dicom and exports it as a dicom dir to a specified directory.
+It also adds a screenshot button that calls back EndoData using the EndoData web protocol (endodata://weasis/screenshot) to inform it of the new screenshot.
 
-The master branch contains Weasis 3.x.x (requires Java 8+) and the old branches are 2.5.x, 2.0.x (Java 6+) and 1.2.x (Java 6+).
+Not the prettiest modifications.
 
-See [How to build Weasis](https://nroduit.github.io/en/getting-started/building-weasis)
+# Building Weasis
 
-# [Release History](CHANGELOG.md)
+I tried with no success to build Weasis locally. Maven dependency errors would block the build (unlike in previous versions).
+The build-installers.yml GitHub action workflow works well.
+It requires some setup for the macos build :
 
-# General Features
-* Flexible integration to HIS or PHR (see [integration documentation](https://nroduit.github.io/en/basics/customize/integration/))
-* Desktop distribution (Windows, Mac OS X, and Linux)
-* Web access through [weasis protocol](https://nroduit.github.io/en/getting-started/weasis-protocol)
-* Embedded DICOM viewer (portable distribution) in CD/DVD or other portable media
-* [Multi-language support](https://nroduit.github.io/en/getting-started/translating/)
-* [Configuration of preferences](https://nroduit.github.io/en/basics/customize/preferences/) on server-side and client-side
-* [API for building custom plug-ins](https://nroduit.github.io/en/basics/customize/build-plugins/)
-* DICOM Send (storeSCU and STOW-RS)
-* DICOM Query/Retrieve (C-GET, C-MOVE and WADO-URI) and DICOMWeb (QUERY and RETRIEVE)
-* Dicomizer module (allow importing standard images and convert them in DICOM)
+- I disabled notarisation for now
+- I created the correct certificates on developer.apple.com (Developer ID Application, Developer ID Installer).
+- The certificates need to be available as an identity (I think ?). To do this I imported them in Keychain Access and I moved them to "login". I also changed the name from "Jeremy Dahan" to "Developer ID Application: Patrick DAHAN".
+- Then I exported the certificates (clicking on "Developer ID Application: Patrick DAHAN") choosing .p12
+- Then `base64 /Users/jd/Desktop/Certificates.p12 | pbcopy`
+- Then I imported them in repo secrets
+- The certificate "Developer ID Application: Patrick DAHAN (XXXXXXXXXX)" goes to MACOS_CERTIFICATE_DEVELOPMENT
+- The certificate "Developer ID Installer: Patrick DAHAN (XXXXXXXXXX)" goes to MACOS_CERTIFICATE_INSTALLER
+- The password goes to MACOS_CERTIFICATE_PWD
+- Finally, the string "Developer ID Application: Patrick DAHAN (XXXXXXXXXX)" goes into MACOS\_\_DEVELOPER_ID
+- Then hit run and get the artifacts from the run summary
 
-# Viewer Features
-![screenshot](https://user-images.githubusercontent.com/993975/39397039-2180c178-4af9-11e8-9c72-2c1e9aa16eae.jpg)     
-  
-* Display all kinds of DICOM files (including multi-frame, enhanced, MPEG-2, MPEG-4, MIME Encapsulation, SR, PR, KOS, AU, RT and ECG)
-* Viewer for common image formats (TIFF, BMP, GIF, JPEG, PNG, RAS, HDR, and PNM)
-* Image manipulation (pan, zoom, windowing, presets, rotation, flip, scroll, crosshair, filtering...)
-* Layouts for comparing series or studies
-* Advanced series synchronization options
-* Display Presentation States (GSPS) and Key Object Selection
-* Create key images (Key Object Selection object) by selection
-* Support of Modality LUTs, VOI LUTs, and Presentation LUTs (even non-linear)
-* Support of several screens with different calibration, support of HiDPI (High Dots Per Inch) monitors, full-screen mode
-* Multiplanar reconstructions and Maximum Intensity Projection
-* Display Structured Reports
-* Display and search into all DICOM attributes
-* Display cross-lines
-* Measurement and annotation tools
-* Region statistics of pixels (Min, Max, Mean, StDev, Skewness, Kurtosis, Entropy)
-* Histogram of modality values
-* SUV measurement
-* Save measurements and annotations in DICOM PR or XML file
-* Import CD/DVD and local DICOM files
-* Export DICOM with several options (DICOMDIR, ZIP, ISO image file with Weasis, TIFF, JPEG, PNG...)
-* Magnifier glass
-* Native and DICOM printing
-* Read DICOM image containing float or double data (Parametric Map)
-* DICOM ECG Viewer
+# archives
+
+Archives from the previous edited version (based on 3.6.3).
+
+## Building Weasis for EndoData
+
+Installing jdk 16 from OpenJDK https://jdk.java.net/16/
+
+Cloning Weasis from git.
+
+```bash
+cd Weasis;
+mvn clean install;
+mvn clean install -Dportable=true -P compressXZ -f weasis-distributions
+```
+
+Next unzip `target/portable-dist/weasis-portable.zip` into `target/portable-dist/weasis-portable`
+
+```bash
+unzip ./weasis-distributions/target/portable-dist/weasis-portable.zip -d ./weasis-distributions/target/portable-dist/weasis-portable
+```
+
+and then
+
+```bash
+cd ./weasis-distributions/script/; ./package-weasis.sh -i ../target/portable-dist/weasis-portable/ -o ../target/installer --jdk /Library/Java/JavaVirtualMachines/jdk-16.jdk/Contents/Home --mac-signing-key-user-name 'Patrick DAHAN (UXNTLMKH4Y)'
+```
+
+In doubt, refer to
+
+https://github.com/nroduit/Weasis/blob/58b23fd46b429190e145740761f490b2375ebdd0/.github/workflows/build-installer.yml
+
+or more recent
+
+```bash
+mvn clean install; mvn clean install -Dportable=true -P compressXZ -f weasis-distributions; unzip ./weasis-distributions/target/portable-dist/weasis-portable.zip -d ./weasis-distributions/target/portable-dist/weasis-portable; cd ./weasis-distributions/script/; ./package-weasis.sh -i ../target/portable-dist/weasis-portable/ -o ../target/installer --jdk /Library/Java/JavaVirtualMachines/jdk-16.jdk/Contents/Home --mac-signing-key-user-name 'Patrick DAHAN (UXNTLMKH4Y)'; cd ../../
+```
+
+My workflow is thus :
+
+- Make edit
+- `mvn clean install;` and check for errors
+- `mvn clean install -Dportable=true -P compressXZ -f weasis-distributions; unzip ./weasis-distributions/target/portable-dist/weasis-portable.zip -d ./weasis-distributions/target/portable-dist/weasis-portable; cd ./weasis-distributions/script/; ./package-weasis.sh -i ../target/portable-dist/weasis-portable/ -o ../target/installer --jdk /Library/Java/JavaVirtualMachines/jdk-16.jdk/Contents/Home --mac-signing-key-user-name 'Patrick DAHAN (UXNTLMKH4Y)'; cd ../../`
+- Launch the resulting app `/Users/jd/Sync/EndoDataSync/dev/Weasis/weasis-distributions/target/installer/Weasis.app/Contents/MacOS/Weasis` to see the logs
+
+## On Windows
+
+Install Cygwin (with menu shortcut)
+You also need dos2unix, which can be installed via chocolatey :
+choco install dos2unix (from an admin PS)
+
+dos2unix package-weasis.sh
+in weasis-distributions/script
+
+Also install Wix and add to path
+
+download jdk 16, and place it in /home in cygwin.
+
+mvn clean install; mvn clean install -Dportable=true -P compressXZ -f weasis-distributions;
+mkdir ./weasis-distributions/target/portable-dist/weasis-portable;
+/cygdrive/c/Windows/System32/tar.exe -xf ./weasis-distributions/target/portable-dist/weasis-portable.zip -C ./weasis-distributions/target/portable-dist/weasis-portable
+
+You might need to remove the version suffix, leaving only 3.6.3 for instance.
+cd ./weasis-distributions/script/
+./package-weasis.sh -i ../target/portable-dist/weasis-portable/ -o ../target/installer --jdk /home/jd/jdk-16
+
+I messed with the script to remove the version string errors and the build went fine. modify the script directly to set the version.
+I did the last line in bash in a windows terminal (with powershell)
