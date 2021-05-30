@@ -106,6 +106,8 @@ public class ImportDicomEndoData extends LoadLocalDicom {
         final ArrayList<SeriesThumbnail> thumbs = new ArrayList<>();
         final ArrayList<File> folders = new ArrayList<>();
 
+        boolean commandIsSent = false;
+
         for (int i = 0; i < file.length; i++) {
             LOGGER.info("Checking file or folder " + file[i].toString()); //$NON-NLS-1$
             if (isCancelled()) {
@@ -126,58 +128,61 @@ public class ImportDicomEndoData extends LoadLocalDicom {
                         if (loader.isReadableDicom()) {
                             LOGGER.info("Dicom file is readable " + file[i].toString()); //$NON-NLS-1$
 
-                            // create `ObjectMapper` instance
-                            ObjectMapper mapper = new ObjectMapper();
-                            Attributes dicomObject = loader.getDicomObject();
+                            if (!commandIsSent) {
+                                // create `ObjectMapper` instance
+                                ObjectMapper mapper = new ObjectMapper();
+                                Attributes dicomObject = loader.getDicomObject();
 
-                            // create a JSON object
-                            ObjectNode output = mapper.createObjectNode();
-                            output.put("ImportDateTime", LocalDateTime.now().toString());
-                            output.put("ExportFolder", exportPath);
-                            output.put("StudyDescription", dicomObject.getString(Tag.StudyDescription));
-                            output.put("StudyID", dicomObject.getString(Tag.StudyID));
-                            output.put("StudyDate", dicomObject.getString(Tag.StudyDate));
-                            output.put("SeriesDate", dicomObject.getString(Tag.SeriesDate));
-                            output.put("SeriesInstanceUID", dicomObject.getString(Tag.SeriesInstanceUID));
-                            output.put("StudyInstanceUID", dicomObject.getString(Tag.StudyInstanceUID));
+                                // create a JSON object
+                                ObjectNode output = mapper.createObjectNode();
+                                output.put("ImportDateTime", LocalDateTime.now().toString());
+                                output.put("ExportFolder", exportPath);
+                                output.put("StudyDescription", dicomObject.getString(Tag.StudyDescription));
+                                output.put("StudyID", dicomObject.getString(Tag.StudyID));
+                                output.put("StudyDate", dicomObject.getString(Tag.StudyDate));
+                                output.put("SeriesDate", dicomObject.getString(Tag.SeriesDate));
+                                output.put("SeriesInstanceUID", dicomObject.getString(Tag.SeriesInstanceUID));
+                                output.put("StudyInstanceUID", dicomObject.getString(Tag.StudyInstanceUID));
 
-                            try {
+                                try {
 
-                                String json = mapper.writeValueAsString(output);
-                                LOGGER.info("Preparing to send json" + json); //$NON-NLS-1$
-                                String encodedString = Base64.getUrlEncoder().encodeToString(json.getBytes());
-                                LOGGER.info("Preparing to send encoded string" + encodedString); //$NON-NLS-1$
-                                boolean isMac;
-                                String OS = System.getProperty("os.name", "generic").toLowerCase();
-                                if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
-                                    isMac = true;
-                                } else if (OS.indexOf("win") >= 0) {
-                                    isMac = false;
-                                } else {
-                                    isMac = false; // Should throw actually.
+                                    String json = mapper.writeValueAsString(output);
+                                    LOGGER.info("Preparing to send json" + json); //$NON-NLS-1$
+                                    String encodedString = Base64.getUrlEncoder().encodeToString(json.getBytes());
+                                    LOGGER.info("Preparing to send encoded string" + encodedString); //$NON-NLS-1$
+                                    boolean isMac;
+                                    String OS = System.getProperty("os.name", "generic").toLowerCase();
+                                    if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
+                                        isMac = true;
+                                    } else if (OS.indexOf("win") >= 0) {
+                                        isMac = false;
+                                    } else {
+                                        isMac = false; // Should throw actually.
+                                    }
+
+                                    String cmd;
+                                    if (isMac) {
+                                        cmd = "open ";
+                                    } else {
+                                        cmd = "cmd.exe /c start ";
+                                    }
+                                    cmd += "endodata://weasis/dicom-import/" + encodedString;
+                                    Runtime run = Runtime.getRuntime();
+                                    LOGGER.info("Preparing to execute command " + cmd); //$NON-NLS-1$
+                                    Process pr = run.exec(cmd);
+                                    pr.waitFor();
+                                    LOGGER.info("Command executed " + cmd); //$NON-NLS-1$
+                                    BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                                    String line = "";
+                                    while ((line = buf.readLine()) != null) {
+                                        System.out.println(line);
+                                        LOGGER.info("Received new stdout line from previous cmd " + line); //$NON-NLS-1$
+                                    }
+                                    commandIsSent = true;
+
+                                } catch (Exception e) {
+                                    LOGGER.info("Dicom export error", e); //$NON-NLS-1$
                                 }
-
-                                String cmd;
-                                if (isMac) {
-                                    cmd = "open ";
-                                } else {
-                                    cmd = "cmd.exe /c start ";
-                                }
-                                cmd += "endodata://weasis/dicom-import/" + encodedString;
-                                Runtime run = Runtime.getRuntime();
-                                LOGGER.info("Preparing to execute command " + cmd); //$NON-NLS-1$
-                                Process pr = run.exec(cmd);
-                                pr.waitFor();
-                                LOGGER.info("Command executed " + cmd); //$NON-NLS-1$
-                                BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-                                String line = "";
-                                while ((line = buf.readLine()) != null) {
-                                    System.out.println(line);
-                                    LOGGER.info("Received new stdout line from previous cmd " + line); //$NON-NLS-1$
-                                }
-
-                            } catch (Exception e) {
-                                LOGGER.info("Dicom export error", e); //$NON-NLS-1$
                             }
                             // Issue: must handle adding image to viewer and building thumbnail (middle
                             // image)
