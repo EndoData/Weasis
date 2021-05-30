@@ -64,7 +64,7 @@ jobs:
       WEASIS_INPUT_BIN: "weasis-distributions/target/portable-dist/weasis-portable/weasis"
       SUBSTANCE_PKG: "3.5.0" # Package for Java 11 (remove in weasis 4)
     runs-on: ${{ matrix.os }}
-    needs: build
+    # needs: build
     strategy:
       fail-fast: false
       matrix:
