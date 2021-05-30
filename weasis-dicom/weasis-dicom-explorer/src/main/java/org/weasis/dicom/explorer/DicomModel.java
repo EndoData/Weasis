@@ -1099,7 +1099,7 @@ public class DicomModel implements TreeModel, DataExplorerModel {
         "  -i --input=PATH   input PATH to DICOM files", // $NON-NLS-2$
         "  -o --output=PATH   export DICOMs to a directory as DICOMDIR", //$NON-NLS-1$
         "  -? --help         show help" }; //$NON-NLS-1$
-
+    LOGGER.info("Received EndoDat Import request " + usage); //$NON-NLS-1$
     final Option opt = Options.compile(usage).parse(argv);
     final String exportPath = opt.get("output"); //$NON-NLS-1$
     final String inputPath = opt.get("input"); //$NON-NLS-1$

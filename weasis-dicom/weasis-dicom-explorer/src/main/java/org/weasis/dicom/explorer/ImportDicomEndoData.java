@@ -72,7 +72,7 @@ import java.util.Base64;
 
 public class ImportDicomEndoData extends LoadLocalDicom {
 
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LoadDicomObjects.class);
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(ImportDicomEndoData.class);
 
     private final DicomModel dicomModel;
 
@@ -97,7 +97,7 @@ public class ImportDicomEndoData extends LoadLocalDicom {
     @Override
     public void addSelectionAndnotify(File[] file, boolean firstLevel) {
         if (firstLevel) {
-            LOGGER.info("Starting addSelectionAndnotify"); //$NON-NLS-1$
+            LOGGER.info("Starting addSelectionAndnotify for file " + file.toString()); //$NON-NLS-1$
         }
         // Step 3 : collect info on dicom
         if (file == null || file.length < 1) {
@@ -107,6 +107,7 @@ public class ImportDicomEndoData extends LoadLocalDicom {
         final ArrayList<File> folders = new ArrayList<>();
 
         for (int i = 0; i < file.length; i++) {
+            LOGGER.info("Checking file or folder " + file[i].toString()); //$NON-NLS-1$
             if (isCancelled()) {
                 return;
             }
@@ -114,13 +115,16 @@ public class ImportDicomEndoData extends LoadLocalDicom {
             if (file[i] == null) {
                 continue;
             } else if (file[i].isDirectory()) {
+                LOGGER.info("Found directory " + file[i].toString()); //$NON-NLS-1$
                 folders.add(file[i]);
             } else {
                 if (file[i].canRead()) {
                     if (FileUtil.isFileExtensionMatching(file[i], DicomCodec.FILE_EXTENSIONS)
                             || MimeInspector.isMatchingMimeTypeFromMagicNumber(file[i], DicomMediaIO.DICOM_MIMETYPE)) {
                         DicomMediaIO loader = new DicomMediaIO(file[i]);
+                        LOGGER.info("Found dicom file " + file[i].toString()); //$NON-NLS-1$
                         if (loader.isReadableDicom()) {
+                            LOGGER.info("Dicom file is readable " + file[i].toString()); //$NON-NLS-1$
 
                             // create `ObjectMapper` instance
                             ObjectMapper mapper = new ObjectMapper();
@@ -140,8 +144,9 @@ public class ImportDicomEndoData extends LoadLocalDicom {
                             try {
 
                                 String json = mapper.writeValueAsString(output);
+                                LOGGER.info("Preparing to send json" + json); //$NON-NLS-1$
                                 String encodedString = Base64.getUrlEncoder().encodeToString(json.getBytes());
-
+                                LOGGER.info("Preparing to send encoded string" + encodedString); //$NON-NLS-1$
                                 boolean isMac;
                                 String OS = System.getProperty("os.name", "generic").toLowerCase();
                                 if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
@@ -160,29 +165,33 @@ public class ImportDicomEndoData extends LoadLocalDicom {
                                 }
                                 cmd += "endodata://weasis/dicom-import/" + encodedString;
                                 Runtime run = Runtime.getRuntime();
+                                LOGGER.info("Preparing to execute command " + cmd); //$NON-NLS-1$
                                 Process pr = run.exec(cmd);
                                 pr.waitFor();
+                                LOGGER.info("Command executed " + cmd); //$NON-NLS-1$
                                 BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
                                 String line = "";
                                 while ((line = buf.readLine()) != null) {
                                     System.out.println(line);
+                                    LOGGER.info("Received new stdout line from previous cmd " + line); //$NON-NLS-1$
                                 }
 
                             } catch (Exception e) {
                                 LOGGER.info("Dicom export error", e); //$NON-NLS-1$
                             }
-                        }
-                        // Issue: must handle adding image to viewer and building thumbnail (middle
-                        // image)
-                        SeriesThumbnail t = this.buildDicomStructure(loader, true);
-                        if (t != null) {
-                            thumbs.add(t);
-                        }
+                            // Issue: must handle adding image to viewer and building thumbnail (middle
+                            // image)
+                            LOGGER.info("Loading dicom into weasis " + file[i]); //$NON-NLS-1$
+                            SeriesThumbnail t = this.buildDicomStructure(loader, true);
+                            if (t != null) {
+                                thumbs.add(t);
+                            }
 
-                        File gpxFile = new File(file[i].getPath() + ".xml"); //$NON-NLS-1$
-                        GraphicModel graphicModel = XmlSerializer.readPresentationModel(gpxFile);
-                        if (graphicModel != null) {
-                            loader.setTag(TagW.PresentationModel, graphicModel);
+                            File gpxFile = new File(file[i].getPath() + ".xml"); //$NON-NLS-1$
+                            GraphicModel graphicModel = XmlSerializer.readPresentationModel(gpxFile);
+                            if (graphicModel != null) {
+                                loader.setTag(TagW.PresentationModel, graphicModel);
+                            }
                         }
                     }
                 }
@@ -203,7 +212,7 @@ public class ImportDicomEndoData extends LoadLocalDicom {
 
     @Override
     protected void done() {
-        LOGGER.info("Starting export line 88"); //$NON-NLS-1$
+        LOGGER.info("Starting export"); //$NON-NLS-1$
         CheckTreeModel treeModel = new CheckTreeModel(dicomModel);
         TreeCheckingModel checkingModel = treeModel.getCheckingModel();
         checkingModel.setCheckingMode(CheckingMode.PROPAGATE_PRESERVING_UNCHECK);
