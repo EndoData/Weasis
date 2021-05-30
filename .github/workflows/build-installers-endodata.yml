@@ -110,6 +110,14 @@ jobs:
       - name: ECHO PATH
         shell: bash
         run: 'echo $PATH'
+
+      - name: ECHO jpackage
+        shell: bash
+        run: 'which jpackage'
+          
+      - name: ECHO jpackage 2
+        shell: bash
+        run: 'echo $(which jpackage)'
           
 
       # - name: Set up JDK for x86 (not provide by Oracle)
