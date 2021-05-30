@@ -107,9 +107,13 @@ jobs:
           architecture: ${{ matrix.platform }}
 
 
+      - name: ECHO JAVA_HOME
+        shell: bash
+        run: 'echo $JAVA_HOME'
+
       - name: ECHO jdk location
         shell: bash
-        with:
+        env:
           javaVersion: ${{ steps.jdk.outputs.version }}
           jdkFile: ${{ steps.jdk.outputs.file }}
         run: 'echo $jdkFile; echo $javaVersion;'
