@@ -109,7 +109,7 @@ jobs:
 
       - name: LIST jdk
         shell: bash
-        run: 'ls /Users/runner/hostedtoolcache/jdk/16.0.0/x64/bin'
+        run: 'ls -R /Users/runner/hostedtoolcache/jdk'
 
       - name: ECHO PATH
         shell: bash
