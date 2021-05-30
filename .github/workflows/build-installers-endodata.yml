@@ -107,6 +107,10 @@ jobs:
           architecture: ${{ matrix.platform }}
 
 
+      - name: Add to path
+        shell: bash
+        run: 'echo "$JAVA_HOME/Contents/Home/bin" >> $GITHUB_PATH'
+
       - name: ECHO JAVA_HOME
         shell: bash
         run: 'echo $JAVA_HOME'
