@@ -36,6 +36,10 @@ It requires some setup for the macos build :
 - Finally, the string "Developer ID Application: Patrick DAHAN (XXXXXXXXXX)" goes into MACOS\_\_DEVELOPER_ID
 - Then hit run and get the artifacts from the run summary
 
+### Warning Maven
+
+If maven blocks some of the repos, try updating the repo sources to https instead of http.
+
 # archives
 
 Archives from the previous edited version (based on 3.6.3).
