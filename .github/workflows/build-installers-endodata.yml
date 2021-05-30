@@ -113,6 +113,12 @@ jobs:
           java-version: 16.0.0-ea.36
           architecture: x86
 
+
+      - name: Fix bug with jpackage and JAVA_HOME
+        shell: bash
+        if: matrix.wsystem == 'macosx'
+        run: 'echo "$JAVA_HOME/Contents/Home/bin" >> $GITHUB_PATH'
+
       - name: Download weasis-portable
         uses: actions/download-artifact@v2
         with:
