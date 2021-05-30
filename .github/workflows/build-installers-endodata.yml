@@ -107,6 +107,13 @@ jobs:
           architecture: ${{ matrix.platform }}
 
 
+      - name: ECHO jdk location
+        shell: bash
+        with:
+          javaVersion: ${{ steps.jdk.outputs.version }}
+          jdkFile: ${{ steps.jdk.outputs.file }}
+        run: 'echo $jdkFile; echo $javaVersion;'
+
       - name: LIST jdk
         shell: bash
         run: 'ls -R /Users/runner/hostedtoolcache/jdk'
