@@ -107,6 +107,10 @@ jobs:
           architecture: ${{ matrix.platform }}
 
 
+      - name: LIST jdk
+        shell: bash
+        run: 'ls /Users/runner/hostedtoolcache/jdk/16.0.0/x64/bin'
+
       - name: ECHO PATH
         shell: bash
         run: 'echo $PATH'
