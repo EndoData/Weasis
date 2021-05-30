@@ -70,7 +70,7 @@ jobs:
       matrix:
         include:
           #- { os: ubuntu-latest, platform: x86, wsystem: linux, warc: x86 }
-          - { os: ubuntu-latest, platform: x64, wsystem: linux, warc: x86-64 }
+          # - { os: ubuntu-latest, platform: x64, wsystem: linux, warc: x86-64 }
           - { os: macos-latest, platform: x64, wsystem: macosx, warc: x86-64 }
           #  - { os: windows-latest, platform: x86, wsystem: windows, warc: x86 }
           - {
